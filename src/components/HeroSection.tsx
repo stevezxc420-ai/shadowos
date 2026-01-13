@@ -1,22 +1,43 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Zap } from "lucide-react";
+import { ArrowRight, Zap, Shield, Award, Users } from "lucide-react";
+import { useScrollAnimation, useAnimatedCounter } from "@/hooks/useScrollAnimation";
+
+const AnimatedStat = ({ end, suffix, label }: { end: number; suffix: string; label: string }) => {
+  const { ref, isVisible } = useScrollAnimation({ threshold: 0.5 });
+  const count = useAnimatedCounter(end, 2000, isVisible);
+  
+  return (
+    <div ref={ref} className="text-center">
+      <div className="text-3xl md:text-4xl font-display font-bold text-foreground">
+        {suffix === "$" ? `$${count}M+` : `${count}${suffix}`}
+      </div>
+      <span className="text-xs text-muted-foreground mt-1 block">{label}</span>
+    </div>
+  );
+};
 
 const HeroSection = () => {
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+      {/* Noise texture overlay */}
+      <div className="absolute inset-0 opacity-[0.015] pointer-events-none noise-texture" />
+      
       {/* Background Effects */}
       <div className="absolute inset-0 hero-gradient" />
-      <div className="absolute inset-0 grid-pattern opacity-30" />
+      <div className="absolute inset-0 grid-pattern opacity-20" />
       
-      {/* Floating orbs */}
-      <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-primary/20 rounded-full blur-[100px] animate-pulse-glow" />
-      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-primary/10 rounded-full blur-[120px] animate-pulse-glow" style={{ animationDelay: '1s' }} />
+      {/* Enhanced Floating orbs */}
+      <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-primary/30 rounded-full blur-[120px] animate-pulse-glow" />
+      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-primary/15 rounded-full blur-[140px] animate-pulse-glow" style={{ animationDelay: '1s' }} />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[150px] animate-pulse-glow" style={{ animationDelay: '0.5s' }} />
+      <div className="absolute bottom-1/3 left-1/6 w-48 h-48 bg-primary/20 rounded-full blur-[80px] animate-float" />
+      <div className="absolute top-1/3 right-1/6 w-32 h-32 bg-primary/25 rounded-full blur-[60px] animate-float" style={{ animationDelay: '2s' }} />
 
       <div className="container mx-auto px-6 pt-24 pb-16 relative z-10">
         <div className="max-w-4xl mx-auto text-center">
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-primary/30 bg-primary/5 mb-8 animate-fade-in-up">
-            <Zap className="h-4 w-4 text-primary" />
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-primary/30 bg-primary/5 mb-8 animate-fade-in-up backdrop-blur-sm">
+            <Zap className="h-4 w-4 text-primary animate-pulse" />
             <span className="text-sm text-primary font-medium">The Shadow Agency Platform</span>
           </div>
 
@@ -46,22 +67,33 @@ const HeroSection = () => {
             </Button>
           </div>
 
-          {/* Social Proof */}
+          {/* Enhanced Social Proof */}
           <div className="mt-16 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
-            <p className="text-sm text-muted-foreground mb-4">Trusted by elite operators worldwide</p>
-            <div className="flex items-center justify-center gap-8 opacity-50">
-              <div className="text-2xl font-display font-bold text-muted-foreground">500+</div>
-              <div className="h-8 w-px bg-border" />
-              <div className="text-2xl font-display font-bold text-muted-foreground">$10M+</div>
-              <div className="h-8 w-px bg-border" />
-              <div className="text-2xl font-display font-bold text-muted-foreground">50K+</div>
+            <p className="text-sm text-muted-foreground mb-6">Trusted by elite operators worldwide</p>
+            
+            {/* Animated Stats */}
+            <div className="glass-card inline-flex items-center justify-center gap-8 md:gap-12 px-8 py-6 mb-8">
+              <AnimatedStat end={500} suffix="+" label="Operators" />
+              <div className="h-12 w-px bg-border" />
+              <AnimatedStat end={10} suffix="$" label="Revenue Managed" />
+              <div className="h-12 w-px bg-border" />
+              <AnimatedStat end={50} suffix="K+" label="Creators Scaled" />
             </div>
-            <div className="flex items-center justify-center gap-8 mt-1">
-              <span className="text-xs text-muted-foreground">Operators</span>
-              <div className="w-px opacity-0">|</div>
-              <span className="text-xs text-muted-foreground">Revenue Managed</span>
-              <div className="w-px opacity-0">|</div>
-              <span className="text-xs text-muted-foreground">Creators Scaled</span>
+
+            {/* Trust Badges */}
+            <div className="flex items-center justify-center gap-6 flex-wrap mt-6">
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/30 border border-border/50">
+                <Shield className="h-3.5 w-3.5 text-primary" />
+                <span className="text-xs text-muted-foreground">SOC2 Compliant</span>
+              </div>
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/30 border border-border/50">
+                <Award className="h-3.5 w-3.5 text-primary" />
+                <span className="text-xs text-muted-foreground">Top Rated 2025</span>
+              </div>
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/30 border border-border/50">
+                <Users className="h-3.5 w-3.5 text-primary" />
+                <span className="text-xs text-muted-foreground">24/7 Support</span>
+              </div>
             </div>
           </div>
         </div>

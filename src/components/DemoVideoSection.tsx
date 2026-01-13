@@ -1,16 +1,24 @@
 import { useState, useRef } from "react";
-import { Upload, Play, X } from "lucide-react";
+import { Upload, Play, X, Film, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 
 const DemoVideoSection = () => {
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { ref: sectionRef, isVisible } = useScrollAnimation();
 
   const handleFileSelect = (file: File) => {
     if (file && file.type.startsWith("video/")) {
-      const url = URL.createObjectURL(file);
-      setVideoUrl(url);
+      setIsUploading(true);
+      // Simulate upload progress
+      setTimeout(() => {
+        const url = URL.createObjectURL(file);
+        setVideoUrl(url);
+        setIsUploading(false);
+      }, 800);
     }
   };
 
@@ -44,10 +52,20 @@ const DemoVideoSection = () => {
     <section id="demo" className="relative py-24 overflow-hidden">
       {/* Background */}
       <div className="absolute inset-0 bg-gradient-to-b from-background via-primary/5 to-background" />
+      <div className="absolute inset-0 grid-pattern opacity-10" />
 
       <div className="container mx-auto px-6 relative z-10">
         {/* Section Header */}
-        <div className="text-center max-w-2xl mx-auto mb-12">
+        <div 
+          ref={sectionRef}
+          className={`text-center max-w-2xl mx-auto mb-12 transition-all duration-700 ${
+            isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+          }`}
+        >
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-primary/30 bg-primary/5 mb-4">
+            <Sparkles className="h-3.5 w-3.5 text-primary" />
+            <span className="text-xs text-primary font-medium">See the magic</span>
+          </div>
           <h2 className="font-display text-4xl md:text-5xl font-bold mb-4">
             See it in <span className="text-primary">action</span>
           </h2>
@@ -57,10 +75,12 @@ const DemoVideoSection = () => {
         </div>
 
         {/* Video Upload Card */}
-        <div className="max-w-4xl mx-auto">
+        <div className={`max-w-4xl mx-auto transition-all duration-700 delay-200 ${
+          isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+        }`}>
           <div
-            className={`glass-card p-8 transition-all duration-300 ${
-              isDragging ? "border-primary/70 bg-primary/10" : ""
+            className={`glass-card p-2 transition-all duration-300 ${
+              isDragging ? "border-primary/70 bg-primary/10 scale-[1.02]" : ""
             }`}
             onDrop={handleDrop}
             onDragOver={handleDragOver}
@@ -72,14 +92,14 @@ const DemoVideoSection = () => {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="absolute top-2 right-2 z-10 bg-background/80 hover:bg-background"
+                  className="absolute top-4 right-4 z-10 bg-background/80 hover:bg-background border border-border"
                   onClick={clearVideo}
                 >
                   <X className="h-4 w-4" />
                 </Button>
 
                 {/* Video player */}
-                <div className="relative rounded-lg overflow-hidden border border-glass-border">
+                <div className="relative rounded-lg overflow-hidden">
                   <video
                     src={videoUrl}
                     controls
@@ -91,41 +111,62 @@ const DemoVideoSection = () => {
               </div>
             ) : (
               <div
-                className="flex flex-col items-center justify-center py-16 cursor-pointer"
+                className={`relative flex flex-col items-center justify-center py-20 cursor-pointer rounded-lg border-2 border-dashed transition-all duration-300 ${
+                  isDragging 
+                    ? "border-primary bg-primary/5" 
+                    : "border-border/50 hover:border-primary/50 hover:bg-muted/20"
+                } ${isUploading ? "pointer-events-none" : ""}`}
                 onClick={() => fileInputRef.current?.click()}
               >
-                {/* Upload icon */}
-                <div className="mb-6 inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary/10 border border-primary/30">
-                  <Upload className="h-10 w-10 text-primary" />
-                </div>
+                {/* Animated background pattern */}
+                <div className="absolute inset-0 grid-pattern opacity-20 rounded-lg" />
+                
+                {isUploading ? (
+                  <div className="flex flex-col items-center gap-4 relative z-10">
+                    <div className="w-16 h-16 rounded-full border-4 border-primary/30 border-t-primary animate-spin" />
+                    <p className="text-muted-foreground">Processing video...</p>
+                  </div>
+                ) : (
+                  <>
+                    {/* Upload icon with decoration */}
+                    <div className="relative mb-6">
+                      <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-primary/10 border border-primary/30 group-hover:bg-primary/20 transition-colors">
+                        <Film className="h-10 w-10 text-primary" />
+                      </div>
+                      <div className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center">
+                        <Upload className="h-4 w-4 text-primary" />
+                      </div>
+                    </div>
 
-                {/* Upload text */}
-                <h3 className="font-display text-2xl font-semibold mb-2 text-foreground">
-                  Upload Demo Video
-                </h3>
-                <p className="text-muted-foreground mb-6 text-center max-w-md">
-                  Drag and drop your video file here, or click to browse
-                </p>
+                    {/* Upload text */}
+                    <h3 className="font-display text-2xl font-semibold mb-2 text-foreground relative z-10">
+                      Upload Demo Video
+                    </h3>
+                    <p className="text-muted-foreground mb-6 text-center max-w-md relative z-10">
+                      Drag and drop your video file here, or click to browse
+                    </p>
 
-                {/* Upload button */}
-                <Button variant="glow" className="gap-2">
-                  <Play className="h-4 w-4" />
-                  Choose Video
-                </Button>
+                    {/* Upload button */}
+                    <Button variant="glow" className="gap-2 relative z-10">
+                      <Play className="h-4 w-4" />
+                      Choose Video
+                    </Button>
 
-                {/* File input */}
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="video/*"
-                  className="hidden"
-                  onChange={handleInputChange}
-                />
+                    {/* File input */}
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="video/*"
+                      className="hidden"
+                      onChange={handleInputChange}
+                    />
 
-                {/* Supported formats */}
-                <p className="text-xs text-muted-foreground mt-4">
-                  Supports MP4, WebM, MOV up to 100MB
-                </p>
+                    {/* Supported formats */}
+                    <p className="text-xs text-muted-foreground mt-6 relative z-10">
+                      Supports MP4, WebM, MOV up to 100MB
+                    </p>
+                  </>
+                )}
               </div>
             )}
           </div>
