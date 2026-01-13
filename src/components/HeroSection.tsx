@@ -37,7 +37,11 @@ const HeroSection = () => {
               Start Operating
               <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
             </Button>
-            <Button variant="glass" size="xl">
+            <Button 
+              variant="glass" 
+              size="xl"
+              onClick={() => document.getElementById('demo')?.scrollIntoView({ behavior: 'smooth' })}
+            >
               Watch Demo
             </Button>
           </div>
