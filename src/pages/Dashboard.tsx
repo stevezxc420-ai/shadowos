@@ -4,7 +4,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Ghost, LogOut, Coins, Loader2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Ghost, LogOut, Coins, Loader2, Sparkles, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const Dashboard = () => {
@@ -13,6 +14,7 @@ const Dashboard = () => {
   const { toast } = useToast();
   const [credits, setCredits] = useState<number | null>(null);
   const [loadingCredits, setLoadingCredits] = useState(true);
+  const [url, setUrl] = useState("");
 
   useEffect(() => {
     if (!loading && !user) {
@@ -62,6 +64,14 @@ const Dashboard = () => {
     navigate("/");
   };
 
+  const handleGenerateStrategy = () => {
+    // Placeholder - functionality to be added later
+    toast({
+      title: "Coming soon",
+      description: "This feature will be available shortly.",
+    });
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -108,37 +118,68 @@ const Dashboard = () => {
         </header>
 
         {/* Main content */}
-        <main className="container mx-auto px-6 py-12">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-            <p className="text-muted-foreground mt-2">
-              Welcome back! Here's an overview of your account.
-            </p>
-          </div>
+        <main className="container mx-auto px-6 py-12 space-y-8">
+          {/* Stats Bar */}
+          <Card className="border-border/50 bg-card/50 backdrop-blur-xl">
+            <CardContent className="flex items-center justify-between py-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                  <Coins className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Credits Remaining</p>
+                  {loadingCredits ? (
+                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                  ) : (
+                    <p className="text-2xl font-bold">{credits ?? 0}</p>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
-          {/* Credits Card */}
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            <Card className="border-border/50 bg-card/50 backdrop-blur-xl">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Available Credits
-                </CardTitle>
-                <Coins className="h-5 w-5 text-primary" />
-              </CardHeader>
-              <CardContent>
-                {loadingCredits ? (
-                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                ) : (
-                  <div className="text-4xl font-bold text-foreground">
-                    {credits ?? 0}
-                  </div>
-                )}
-                <p className="text-xs text-muted-foreground mt-1">
-                  Credits can be used for premium features
+          {/* URL Input Section */}
+          <Card className="border-border/50 bg-card/50 backdrop-blur-xl">
+            <CardContent className="py-8 space-y-6">
+              <Input
+                type="url"
+                placeholder="Paste YouTube or Instagram URL here"
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                className="h-14 text-lg px-5"
+              />
+              <Button 
+                variant="glow" 
+                size="lg" 
+                className="w-full h-14 text-lg"
+                onClick={handleGenerateStrategy}
+              >
+                <Sparkles className="h-5 w-5 mr-2" />
+                Generate Revenue Strategy
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Recent Reports Section */}
+          <Card className="border-border/50 bg-card/50 backdrop-blur-xl">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5 text-primary" />
+                Your Recent Reports
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted/50 mb-4">
+                  <FileText className="h-8 w-8 text-muted-foreground" />
+                </div>
+                <p className="text-muted-foreground">No reports yet</p>
+                <p className="text-sm text-muted-foreground/70">
+                  Generate your first revenue strategy to see it here
                 </p>
-              </CardContent>
-            </Card>
-          </div>
+              </div>
+            </CardContent>
+          </Card>
         </main>
       </div>
     </div>
