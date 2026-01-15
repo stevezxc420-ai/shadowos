@@ -1,28 +1,53 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Ghost, LogOut, Coins, Loader2, Sparkles, FileText } from "lucide-react";
+import { Ghost, LogOut, Coins, Loader2, Sparkles, FileText, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Badge } from "@/components/ui/badge";
+
+const DEMO_DATA = {
+  email: "demo@example.com",
+  credits: 150,
+  url: "https://youtube.com/watch?v=example",
+};
 
 const Dashboard = () => {
   const { user, loading, signOut } = useAuth();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { toast } = useToast();
   const [credits, setCredits] = useState<number | null>(null);
   const [loadingCredits, setLoadingCredits] = useState(true);
   const [url, setUrl] = useState("");
 
-  useEffect(() => {
-    if (!loading && !user) {
-      navigate("/auth");
+  const isDemoMode = searchParams.get("demo") === "true";
+
+  const toggleDemoMode = () => {
+    if (isDemoMode) {
+      searchParams.delete("demo");
+    } else {
+      searchParams.set("demo", "true");
     }
-  }, [user, loading, navigate]);
+    setSearchParams(searchParams);
+  };
 
   useEffect(() => {
+    if (!loading && !user && !isDemoMode) {
+      navigate("/auth");
+    }
+  }, [user, loading, navigate, isDemoMode]);
+
+  useEffect(() => {
+    if (isDemoMode) {
+      setCredits(DEMO_DATA.credits);
+      setLoadingCredits(false);
+      return;
+    }
+
     const fetchCredits = async () => {
       if (!user) return;
       
@@ -53,9 +78,17 @@ const Dashboard = () => {
     if (user) {
       fetchCredits();
     }
-  }, [user, toast]);
+  }, [user, toast, isDemoMode]);
 
   const handleSignOut = async () => {
+    if (isDemoMode) {
+      toggleDemoMode();
+      toast({
+        title: "Demo mode disabled",
+        description: "Returning to normal mode.",
+      });
+      return;
+    }
     await signOut();
     toast({
       title: "Signed out",
@@ -65,14 +98,20 @@ const Dashboard = () => {
   };
 
   const handleGenerateStrategy = () => {
-    // Placeholder - functionality to be added later
+    if (isDemoMode) {
+      toast({
+        title: "Demo Mode",
+        description: "This is a preview. Sign in to use actual features.",
+      });
+      return;
+    }
     toast({
       title: "Coming soon",
       description: "This feature will be available shortly.",
     });
   };
 
-  if (loading) {
+  if (loading && !isDemoMode) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -80,12 +119,27 @@ const Dashboard = () => {
     );
   }
 
+  const displayEmail = isDemoMode ? DEMO_DATA.email : user?.email;
+  const displayCredits = isDemoMode ? DEMO_DATA.credits : credits;
+
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
       {/* Background effects */}
       <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent" />
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
       <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
+      
+      {/* Demo Mode Banner */}
+      {isDemoMode && (
+        <div className="relative z-20 bg-amber-500/10 border-b border-amber-500/30 py-2">
+          <div className="container mx-auto px-6 flex items-center justify-center gap-2">
+            <Eye className="h-4 w-4 text-amber-500" />
+            <span className="text-sm text-amber-500 font-medium">
+              Demo Mode - Viewing sample data. Functionality is disabled.
+            </span>
+          </div>
+        </div>
+      )}
       
       <div className="relative z-10">
         {/* Header */}
@@ -103,14 +157,40 @@ const Dashboard = () => {
                 </span>
               </a>
 
-              {/* User info & Sign out */}
+              {/* User info & Actions */}
               <div className="flex items-center gap-4">
+                {/* Demo Toggle */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={toggleDemoMode}
+                  className="gap-2"
+                >
+                  {isDemoMode ? (
+                    <>
+                      <EyeOff className="h-4 w-4" />
+                      <span className="hidden sm:inline">Exit Demo</span>
+                    </>
+                  ) : (
+                    <>
+                      <Eye className="h-4 w-4" />
+                      <span className="hidden sm:inline">Demo Mode</span>
+                    </>
+                  )}
+                </Button>
+
+                {isDemoMode && (
+                  <Badge variant="outline" className="border-amber-500/50 text-amber-500">
+                    Demo
+                  </Badge>
+                )}
+
                 <span className="text-sm text-muted-foreground hidden sm:block">
-                  {user?.email}
+                  {displayEmail}
                 </span>
                 <Button variant="ghost" size="sm" onClick={handleSignOut}>
                   <LogOut className="h-4 w-4 mr-2" />
-                  Sign Out
+                  {isDemoMode ? "Exit" : "Sign Out"}
                 </Button>
               </div>
             </div>
@@ -131,7 +211,7 @@ const Dashboard = () => {
                   {loadingCredits ? (
                     <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                   ) : (
-                    <p className="text-2xl font-bold">{credits ?? 0}</p>
+                    <p className="text-2xl font-bold">{displayCredits ?? 0}</p>
                   )}
                 </div>
               </div>
@@ -144,8 +224,9 @@ const Dashboard = () => {
               <Input
                 type="url"
                 placeholder="Paste YouTube or Instagram URL here"
-                value={url}
+                value={isDemoMode ? DEMO_DATA.url : url}
                 onChange={(e) => setUrl(e.target.value)}
+                disabled={isDemoMode}
                 className="h-14 text-lg px-5"
               />
               <Button 
