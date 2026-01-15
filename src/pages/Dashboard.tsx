@@ -5,15 +5,37 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Ghost, LogOut, Coins, Loader2, Sparkles, FileText, Eye, EyeOff } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Ghost, LogOut, Coins, Loader2, Sparkles, FileText, Eye, EyeOff, Youtube, Instagram } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
+import ReportView from "@/components/ReportView";
 
 const DEMO_DATA = {
   email: "demo@example.com",
   credits: 150,
   url: "https://youtube.com/watch?v=example",
 };
+
+interface ReportData {
+  creator_analysis: {
+    niche: string;
+    audience_vibe: string;
+    unmet_needs: string[];
+  };
+  the_product: {
+    name: string;
+    type: string;
+    one_sentence_pitch: string;
+    suggested_price: string;
+    estimated_revenue_potential: string;
+  };
+  launch_strategy: {
+    pre_launch_hook: string;
+    day_1_to_30_plan: Array<{ week: number; focus: string }>;
+    viral_hooks: string[];
+  };
+}
 
 const Dashboard = () => {
   const { user, loading, signOut } = useAuth();
@@ -23,6 +45,10 @@ const Dashboard = () => {
   const [credits, setCredits] = useState<number | null>(null);
   const [loadingCredits, setLoadingCredits] = useState(true);
   const [url, setUrl] = useState("");
+  const [platform, setPlatform] = useState<"youtube" | "instagram">("youtube");
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [report, setReport] = useState<ReportData | null>(null);
+  const [reportMeta, setReportMeta] = useState<{ platform: string; url: string } | null>(null);
 
   const isDemoMode = searchParams.get("demo") === "true";
 
@@ -97,7 +123,7 @@ const Dashboard = () => {
     navigate("/");
   };
 
-  const handleGenerateStrategy = () => {
+  const handleGenerateStrategy = async () => {
     if (isDemoMode) {
       toast({
         title: "Demo Mode",
@@ -105,10 +131,83 @@ const Dashboard = () => {
       });
       return;
     }
-    toast({
-      title: "Coming soon",
-      description: "This feature will be available shortly.",
-    });
+
+    if (!url.trim()) {
+      toast({
+        title: "URL Required",
+        description: "Please paste a YouTube or Instagram URL.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (credits === null || credits <= 0) {
+      toast({
+        title: "No Credits",
+        description: "You need at least 1 credit to generate a strategy.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsGenerating(true);
+    setReport(null);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/analyze-creator`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${session?.access_token}`,
+          },
+          body: JSON.stringify({ url, platform }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        if (data.code === "NO_CREDITS") {
+          toast({
+            title: "No Credits",
+            description: "You need more credits to generate a strategy.",
+            variant: "destructive",
+          });
+        } else {
+          throw new Error(data.error || "Failed to generate strategy");
+        }
+        return;
+      }
+
+      setReport(data.report);
+      setReportMeta({ platform: data.platform, url: data.url });
+      setCredits(data.credits_remaining);
+      
+      toast({
+        title: "Strategy Generated!",
+        description: "Your revenue strategy report is ready.",
+      });
+
+    } catch (error) {
+      console.error("Error generating strategy:", error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to generate strategy.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleCloseReport = () => {
+    setReport(null);
+    setReportMeta(null);
+    setUrl("");
   };
 
   if (loading && !isDemoMode) {
@@ -218,49 +317,101 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-          {/* URL Input Section */}
-          <Card className="border-border/50 bg-card/50 backdrop-blur-xl">
-            <CardContent className="py-8 space-y-6">
-              <Input
-                type="url"
-                placeholder="Paste YouTube or Instagram URL here"
-                value={isDemoMode ? DEMO_DATA.url : url}
-                onChange={(e) => setUrl(e.target.value)}
-                disabled={isDemoMode}
-                className="h-14 text-lg px-5"
-              />
-              <Button 
-                variant="glow" 
-                size="lg" 
-                className="w-full h-14 text-lg"
-                onClick={handleGenerateStrategy}
-              >
-                <Sparkles className="h-5 w-5 mr-2" />
-                Generate Revenue Strategy
-              </Button>
-            </CardContent>
-          </Card>
+          {/* Show Report or Input Section */}
+          {report && reportMeta ? (
+            <ReportView 
+              report={report} 
+              platform={reportMeta.platform} 
+              url={reportMeta.url}
+              onClose={handleCloseReport}
+            />
+          ) : (
+            <>
+              {/* URL Input Section */}
+              <Card className="border-border/50 bg-card/50 backdrop-blur-xl">
+                <CardContent className="py-8 space-y-6">
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <Input
+                      type="url"
+                      placeholder={platform === 'youtube' ? "Paste YouTube URL here..." : "Paste Instagram URL here..."}
+                      value={isDemoMode ? DEMO_DATA.url : url}
+                      onChange={(e) => setUrl(e.target.value)}
+                      disabled={isDemoMode || isGenerating}
+                      className="h-14 text-lg px-5 flex-1"
+                    />
+                    <Select 
+                      value={platform} 
+                      onValueChange={(value: "youtube" | "instagram") => setPlatform(value)}
+                      disabled={isDemoMode || isGenerating}
+                    >
+                      <SelectTrigger className="w-full sm:w-48 h-14">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="youtube">
+                          <div className="flex items-center gap-2">
+                            <Youtube className="h-4 w-4 text-red-500" />
+                            YouTube
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="instagram">
+                          <div className="flex items-center gap-2">
+                            <Instagram className="h-4 w-4 text-pink-500" />
+                            Instagram
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button 
+                    variant="glow" 
+                    size="lg" 
+                    className="w-full h-14 text-lg"
+                    onClick={handleGenerateStrategy}
+                    disabled={isDemoMode || isGenerating || (credits !== null && credits <= 0)}
+                  >
+                    {isGenerating ? (
+                      <>
+                        <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                        Analyzing...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="h-5 w-5 mr-2" />
+                        Generate Revenue Strategy
+                      </>
+                    )}
+                  </Button>
+                  {credits !== null && credits <= 0 && !isDemoMode && (
+                    <p className="text-center text-sm text-destructive">
+                      You have no credits remaining. Please add more credits to continue.
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
 
-          {/* Recent Reports Section */}
-          <Card className="border-border/50 bg-card/50 backdrop-blur-xl">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5 text-primary" />
-                Your Recent Reports
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-col items-center justify-center py-12 text-center">
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted/50 mb-4">
-                  <FileText className="h-8 w-8 text-muted-foreground" />
-                </div>
-                <p className="text-muted-foreground">No reports yet</p>
-                <p className="text-sm text-muted-foreground/70">
-                  Generate your first revenue strategy to see it here
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+              {/* Recent Reports Section */}
+              <Card className="border-border/50 bg-card/50 backdrop-blur-xl">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <FileText className="h-5 w-5 text-primary" />
+                    Your Recent Reports
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted/50 mb-4">
+                      <FileText className="h-8 w-8 text-muted-foreground" />
+                    </div>
+                    <p className="text-muted-foreground">No reports yet</p>
+                    <p className="text-sm text-muted-foreground/70">
+                      Generate your first revenue strategy to see it here
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </>
+          )}
         </main>
       </div>
     </div>
