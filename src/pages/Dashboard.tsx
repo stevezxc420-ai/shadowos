@@ -3,10 +3,10 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Ghost, LogOut, Coins, Loader2, Sparkles, FileText, Eye, EyeOff, Youtube, Instagram } from "lucide-react";
+import { Ghost, LogOut, Coins, Loader2, Sparkles, FileText, Eye, EyeOff, Youtube, Instagram, Zap, ArrowRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import ReportView from "@/components/ReportView";
@@ -222,198 +222,244 @@ const Dashboard = () => {
   const displayCredits = isDemoMode ? DEMO_DATA.credits : credits;
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden">
+    <div className="min-h-screen bg-background">
       {/* Background effects */}
-      <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent" />
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
-      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
+      <div className="fixed inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent pointer-events-none" />
+      <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-primary/5 rounded-full blur-3xl pointer-events-none" />
       
       {/* Demo Mode Banner */}
       {isDemoMode && (
-        <div className="relative z-20 bg-amber-500/10 border-b border-amber-500/30 py-2">
-          <div className="container mx-auto px-6 flex items-center justify-center gap-2">
+        <div className="sticky top-0 z-30 bg-amber-500/10 border-b border-amber-500/30 py-2">
+          <div className="container mx-auto px-4 flex items-center justify-center gap-2">
             <Eye className="h-4 w-4 text-amber-500" />
             <span className="text-sm text-amber-500 font-medium">
-              Demo Mode - Viewing sample data. Functionality is disabled.
+              Demo Mode - Viewing sample data
             </span>
           </div>
         </div>
       )}
       
-      <div className="relative z-10">
-        {/* Header */}
-        <header className="border-b border-border/50 bg-background/80 backdrop-blur-xl">
-          <div className="container mx-auto px-6">
-            <div className="flex h-16 items-center justify-between">
-              {/* Logo */}
-              <a href="/" className="flex items-center gap-2 group">
-                <div className="relative flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 border border-primary/30 group-hover:border-primary/60 transition-colors">
-                  <Ghost className="h-5 w-5 text-primary" />
-                  <div className="absolute inset-0 rounded-lg bg-primary/20 blur-lg opacity-0 group-hover:opacity-100 transition-opacity" />
-                </div>
-                <span className="font-display text-xl font-bold tracking-tight">
-                  Shadow<span className="text-primary">OS</span>
-                </span>
-              </a>
-
-              {/* User info & Actions */}
-              <div className="flex items-center gap-4">
-                {/* Demo Toggle */}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={toggleDemoMode}
-                  className="gap-2"
-                >
-                  {isDemoMode ? (
-                    <>
-                      <EyeOff className="h-4 w-4" />
-                      <span className="hidden sm:inline">Exit Demo</span>
-                    </>
-                  ) : (
-                    <>
-                      <Eye className="h-4 w-4" />
-                      <span className="hidden sm:inline">Demo Mode</span>
-                    </>
-                  )}
-                </Button>
-
-                {isDemoMode && (
-                  <Badge variant="outline" className="border-amber-500/50 text-amber-500">
-                    Demo
-                  </Badge>
-                )}
-
-                <span className="text-sm text-muted-foreground hidden sm:block">
-                  {displayEmail}
-                </span>
-                <Button variant="ghost" size="sm" onClick={handleSignOut}>
-                  <LogOut className="h-4 w-4 mr-2" />
-                  {isDemoMode ? "Exit" : "Sign Out"}
-                </Button>
+      {/* Header */}
+      <header className="sticky top-0 z-20 border-b border-border/50 bg-background/80 backdrop-blur-xl">
+        <div className="container mx-auto px-4">
+          <div className="flex h-14 items-center justify-between">
+            {/* Logo */}
+            <a href="/" className="flex items-center gap-2 group">
+              <div className="relative flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 border border-primary/30 group-hover:border-primary/60 transition-colors">
+                <Ghost className="h-4 w-4 text-primary" />
               </div>
+              <span className="font-display text-lg font-bold tracking-tight">
+                Shadow<span className="text-primary">OS</span>
+              </span>
+            </a>
+
+            {/* Right side */}
+            <div className="flex items-center gap-3">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={toggleDemoMode}
+                className="gap-1.5 text-xs h-8"
+              >
+                {isDemoMode ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                <span className="hidden sm:inline">{isDemoMode ? "Exit Demo" : "Demo"}</span>
+              </Button>
+
+              {isDemoMode && (
+                <Badge variant="outline" className="border-amber-500/50 text-amber-500 text-xs">
+                  Demo
+                </Badge>
+              )}
+
+              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/50 border border-border/50">
+                <Coins className="h-3.5 w-3.5 text-primary" />
+                {loadingCredits ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
+                ) : (
+                  <span className="text-sm font-medium">{displayCredits ?? 0}</span>
+                )}
+              </div>
+
+              <span className="text-xs text-muted-foreground hidden md:block max-w-[150px] truncate">
+                {displayEmail}
+              </span>
+
+              <Button variant="ghost" size="sm" onClick={handleSignOut} className="h-8 px-2">
+                <LogOut className="h-4 w-4" />
+              </Button>
             </div>
           </div>
-        </header>
+        </div>
+      </header>
 
-        {/* Main content */}
-        <main className="container mx-auto px-6 py-12 space-y-8">
-          {/* Stats Bar */}
-          <Card className="border-border/50 bg-card/50 backdrop-blur-xl">
-            <CardContent className="flex items-center justify-between py-4">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                  <Coins className="h-5 w-5 text-primary" />
+      {/* Main Content */}
+      <main className="container mx-auto px-4 py-8">
+        <div className="max-w-3xl mx-auto space-y-8">
+          {/* Welcome Section */}
+          <div className="text-center space-y-2">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+              Generate Revenue Strategy
+            </h1>
+            <p className="text-muted-foreground text-sm sm:text-base">
+              Paste a creator's URL to unlock their monetization potential
+            </p>
+          </div>
+
+          {/* Credits Card - Mobile */}
+          <div className="sm:hidden">
+            <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+              <CardContent className="flex items-center justify-between py-3">
+                <div className="flex items-center gap-2">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+                    <Coins className="h-4 w-4 text-primary" />
+                  </div>
+                  <span className="text-sm text-muted-foreground">Credits</span>
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Credits Remaining</p>
-                  {loadingCredits ? (
-                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                  ) : (
-                    <p className="text-2xl font-bold">{displayCredits ?? 0}</p>
-                  )}
-                </div>
+                {loadingCredits ? (
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                ) : (
+                  <span className="text-xl font-bold">{displayCredits ?? 0}</span>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Main Input Card */}
+          <Card className="border-border/50 bg-card/80 backdrop-blur-sm overflow-hidden">
+            <CardContent className="p-6 space-y-5">
+              {/* Platform Selection */}
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setPlatform("youtube")}
+                  disabled={isDemoMode || isGenerating}
+                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg border transition-all ${
+                    platform === "youtube" 
+                      ? "bg-red-500/10 border-red-500/50 text-red-500" 
+                      : "bg-muted/30 border-border/50 text-muted-foreground hover:bg-muted/50"
+                  }`}
+                >
+                  <Youtube className="h-5 w-5" />
+                  <span className="font-medium">YouTube</span>
+                </button>
+                <button
+                  onClick={() => setPlatform("instagram")}
+                  disabled={isDemoMode || isGenerating}
+                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg border transition-all ${
+                    platform === "instagram" 
+                      ? "bg-pink-500/10 border-pink-500/50 text-pink-500" 
+                      : "bg-muted/30 border-border/50 text-muted-foreground hover:bg-muted/50"
+                  }`}
+                >
+                  <Instagram className="h-5 w-5" />
+                  <span className="font-medium">Instagram</span>
+                </button>
               </div>
+
+              {/* URL Input */}
+              <div className="relative">
+                <Input
+                  type="url"
+                  placeholder={platform === 'youtube' 
+                    ? "https://youtube.com/@creator or video URL" 
+                    : "https://instagram.com/creator"
+                  }
+                  value={isDemoMode ? DEMO_DATA.url : url}
+                  onChange={(e) => setUrl(e.target.value)}
+                  disabled={isDemoMode || isGenerating}
+                  className="h-14 text-base px-4 pr-12 bg-background/50"
+                />
+                {url && !isDemoMode && (
+                  <button 
+                    onClick={() => setUrl("")}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
+
+              {/* Generate Button */}
+              <Button 
+                variant="glow" 
+                size="lg" 
+                className="w-full h-14 text-base font-semibold gap-2"
+                onClick={handleGenerateStrategy}
+                disabled={isDemoMode || isGenerating || (credits !== null && credits <= 0)}
+              >
+                {isGenerating ? (
+                  <>
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    Analyzing Creator...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-5 w-5" />
+                    Generate Strategy
+                    <ArrowRight className="h-4 w-4 ml-1" />
+                  </>
+                )}
+              </Button>
+
+              {credits !== null && credits <= 0 && !isDemoMode && (
+                <p className="text-center text-sm text-destructive">
+                  You have no credits remaining. Please add more credits to continue.
+                </p>
+              )}
             </CardContent>
           </Card>
 
-          {/* Show Report or Input Section */}
-          {report && reportMeta ? (
-            <ReportView 
-              report={report} 
-              platform={reportMeta.platform} 
-              url={reportMeta.url}
-              onClose={handleCloseReport}
-            />
-          ) : (
-            <>
-              {/* URL Input Section */}
-              <Card className="border-border/50 bg-card/50 backdrop-blur-xl">
-                <CardContent className="py-8 space-y-6">
-                  <div className="flex flex-col sm:flex-row gap-4">
-                    <Input
-                      type="url"
-                      placeholder={platform === 'youtube' ? "Paste YouTube URL here..." : "Paste Instagram URL here..."}
-                      value={isDemoMode ? DEMO_DATA.url : url}
-                      onChange={(e) => setUrl(e.target.value)}
-                      disabled={isDemoMode || isGenerating}
-                      className="h-14 text-lg px-5 flex-1"
-                    />
-                    <Select 
-                      value={platform} 
-                      onValueChange={(value: "youtube" | "instagram") => setPlatform(value)}
-                      disabled={isDemoMode || isGenerating}
-                    >
-                      <SelectTrigger className="w-full sm:w-48 h-14">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="youtube">
-                          <div className="flex items-center gap-2">
-                            <Youtube className="h-4 w-4 text-red-500" />
-                            YouTube
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="instagram">
-                          <div className="flex items-center gap-2">
-                            <Instagram className="h-4 w-4 text-pink-500" />
-                            Instagram
-                          </div>
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <Button 
-                    variant="glow" 
-                    size="lg" 
-                    className="w-full h-14 text-lg"
-                    onClick={handleGenerateStrategy}
-                    disabled={isDemoMode || isGenerating || (credits !== null && credits <= 0)}
-                  >
-                    {isGenerating ? (
-                      <>
-                        <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                        Analyzing...
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="h-5 w-5 mr-2" />
-                        Generate Revenue Strategy
-                      </>
-                    )}
-                  </Button>
-                  {credits !== null && credits <= 0 && !isDemoMode && (
-                    <p className="text-center text-sm text-destructive">
-                      You have no credits remaining. Please add more credits to continue.
-                    </p>
-                  )}
-                </CardContent>
-              </Card>
+          {/* Feature Highlights */}
+          <div className="grid grid-cols-3 gap-3">
+            {[
+              { icon: Zap, label: "Instant Analysis" },
+              { icon: FileText, label: "PDF Export" },
+              { icon: Sparkles, label: "AI-Powered" },
+            ].map(({ icon: Icon, label }) => (
+              <div 
+                key={label}
+                className="flex flex-col items-center gap-2 p-4 rounded-lg bg-muted/20 border border-border/30"
+              >
+                <Icon className="h-5 w-5 text-primary" />
+                <span className="text-xs text-muted-foreground text-center">{label}</span>
+              </div>
+            ))}
+          </div>
 
-              {/* Recent Reports Section */}
-              <Card className="border-border/50 bg-card/50 backdrop-blur-xl">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <FileText className="h-5 w-5 text-primary" />
-                    Your Recent Reports
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex flex-col items-center justify-center py-12 text-center">
-                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted/50 mb-4">
-                      <FileText className="h-8 w-8 text-muted-foreground" />
+          {/* How it Works */}
+          <div className="pt-4">
+            <h3 className="text-sm font-medium text-muted-foreground mb-4 text-center">How it works</h3>
+            <div className="flex items-center justify-between gap-2">
+              {[
+                { step: "1", text: "Paste URL" },
+                { step: "2", text: "AI Analysis" },
+                { step: "3", text: "Get Strategy" },
+              ].map(({ step, text }, index) => (
+                <div key={step} className="flex items-center gap-2 flex-1">
+                  <div className="flex flex-col items-center gap-1.5 flex-1">
+                    <div className="w-8 h-8 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center text-sm font-bold text-primary">
+                      {step}
                     </div>
-                    <p className="text-muted-foreground">No reports yet</p>
-                    <p className="text-sm text-muted-foreground/70">
-                      Generate your first revenue strategy to see it here
-                    </p>
+                    <span className="text-xs text-muted-foreground">{text}</span>
                   </div>
-                </CardContent>
-              </Card>
-            </>
-          )}
-        </main>
-      </div>
+                  {index < 2 && (
+                    <ArrowRight className="h-4 w-4 text-muted-foreground/50 flex-shrink-0" />
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </main>
+
+      {/* Report Modal */}
+      {report && reportMeta && (
+        <ReportView 
+          report={report} 
+          platform={reportMeta.platform} 
+          url={reportMeta.url}
+          onClose={handleCloseReport}
+        />
+      )}
     </div>
   );
 };
