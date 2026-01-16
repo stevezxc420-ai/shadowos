@@ -12,7 +12,8 @@ import {
   Users,
   TrendingUp,
   MessageSquare,
-  X
+  X,
+  ArrowLeft
 } from "lucide-react";
 import { jsPDF } from "jspdf";
 
@@ -51,7 +52,7 @@ const ReportView = ({ report, platform, url, onClose }: ReportViewProps) => {
 
     // Title
     doc.setFontSize(24);
-    doc.setTextColor(139, 92, 246); // Purple
+    doc.setTextColor(139, 92, 246);
     doc.text("ShadowOS Revenue Strategy", pageWidth / 2, y, { align: "center" });
     y += 15;
 
@@ -77,7 +78,7 @@ const ReportView = ({ report, platform, url, onClose }: ReportViewProps) => {
 
     doc.text("Unmet Needs:", 20, y);
     y += 6;
-    report.creator_analysis.unmet_needs.forEach((need, i) => {
+    report.creator_analysis.unmet_needs.forEach((need) => {
       const needLines = doc.splitTextToSize(`• ${need}`, pageWidth - 50);
       doc.text(needLines, 25, y);
       y += needLines.length * 6;
@@ -153,150 +154,174 @@ const ReportView = ({ report, platform, url, onClose }: ReportViewProps) => {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold flex items-center gap-2">
-            <Sparkles className="h-6 w-6 text-primary" />
-            Revenue Strategy Report
-          </h2>
-          <p className="text-muted-foreground text-sm mt-1">
-            Analysis for {platform === 'youtube' ? 'YouTube' : 'Instagram'} creator
-          </p>
+    <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm">
+      <div className="fixed inset-y-0 right-0 w-full max-w-4xl bg-background border-l border-border shadow-2xl overflow-hidden animate-in slide-in-from-right duration-300">
+        {/* Header */}
+        <div className="sticky top-0 z-10 flex items-center justify-between px-6 py-4 bg-background/95 backdrop-blur-xl border-b border-border">
+          <div className="flex items-center gap-4">
+            <Button onClick={onClose} variant="ghost" size="icon" className="shrink-0">
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div>
+              <h2 className="text-xl font-bold flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-primary" />
+                Revenue Strategy Report
+              </h2>
+              <p className="text-muted-foreground text-sm">
+                {platform === 'youtube' ? 'YouTube' : 'Instagram'} Creator Analysis
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button onClick={handleDownloadPDF} size="sm" className="gap-2">
+              <Download className="h-4 w-4" />
+              Download PDF
+            </Button>
+            <Button onClick={onClose} variant="ghost" size="icon">
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
-        <div className="flex gap-2">
-          <Button onClick={handleDownloadPDF} variant="outline" className="gap-2">
-            <Download className="h-4 w-4" />
-            Download PDF
-          </Button>
-          <Button onClick={onClose} variant="ghost" size="icon">
-            <X className="h-4 w-4" />
-          </Button>
+
+        {/* Content */}
+        <div className="overflow-y-auto h-[calc(100vh-73px)] p-6 space-y-6">
+          {/* Creator Analysis */}
+          <Card className="border-border/50 bg-card/80">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+                  <Users className="h-4 w-4 text-primary" />
+                </div>
+                Creator Analysis
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex flex-wrap gap-2">
+                <Badge variant="secondary" className="text-sm px-3 py-1">
+                  {report.creator_analysis.niche}
+                </Badge>
+              </div>
+              <div className="p-4 rounded-lg bg-muted/30 border border-border/50">
+                <p className="text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wide">Audience Vibe</p>
+                <p className="text-foreground leading-relaxed">{report.creator_analysis.audience_vibe}</p>
+              </div>
+              <div>
+                <p className="text-xs font-medium text-muted-foreground mb-3 uppercase tracking-wide flex items-center gap-1.5">
+                  <Target className="h-3.5 w-3.5" />
+                  Audience Pain Points
+                </p>
+                <div className="grid gap-2">
+                  {report.creator_analysis.unmet_needs.map((need, index) => (
+                    <div key={index} className="flex items-start gap-3 p-3 rounded-lg bg-muted/20 border border-border/30">
+                      <span className="flex-shrink-0 w-5 h-5 rounded-full bg-destructive/20 text-destructive text-xs flex items-center justify-center font-medium mt-0.5">
+                        !
+                      </span>
+                      <p className="text-sm text-foreground">{need}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* The Product */}
+          <Card className="border-primary/30 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/20">
+                  <Lightbulb className="h-4 w-4 text-primary" />
+                </div>
+                The Product Idea
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="p-4 rounded-lg bg-background/50 border border-primary/20">
+                <h3 className="text-xl font-bold text-primary mb-2">{report.the_product.name}</h3>
+                <Badge variant="outline" className="border-primary/30 text-primary">{report.the_product.type}</Badge>
+              </div>
+              <blockquote className="pl-4 border-l-2 border-primary/50 italic text-foreground/90">
+                "{report.the_product.one_sentence_pitch}"
+              </blockquote>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex items-center gap-3 p-4 rounded-xl bg-background/80 border border-border/50">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-500/10">
+                    <DollarSign className="h-6 w-6 text-green-500" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide">Suggested Price</p>
+                    <p className="font-bold text-lg">{report.the_product.suggested_price}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 p-4 rounded-xl bg-background/80 border border-border/50">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+                    <TrendingUp className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide">Revenue Potential</p>
+                    <p className="font-bold text-lg">{report.the_product.estimated_revenue_potential}</p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Launch Strategy */}
+          <Card className="border-border/50 bg-card/80">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+                  <Rocket className="h-4 w-4 text-primary" />
+                </div>
+                Launch Strategy
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="p-4 rounded-lg bg-primary/5 border border-primary/20">
+                <p className="text-xs font-medium text-primary mb-1 uppercase tracking-wide">🚀 Pre-Launch Hook</p>
+                <p className="font-medium text-foreground">{report.launch_strategy.pre_launch_hook}</p>
+              </div>
+
+              <div>
+                <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-primary" />
+                  30-Day Launch Calendar
+                </h4>
+                <div className="grid grid-cols-4 gap-3">
+                  {report.launch_strategy.day_1_to_30_plan.map((item) => (
+                    <div 
+                      key={item.week} 
+                      className="p-3 rounded-lg bg-muted/30 border border-border/50 hover:border-primary/50 transition-all hover:bg-muted/50"
+                    >
+                      <p className="text-primary font-bold text-sm mb-1">Week {item.week}</p>
+                      <p className="text-xs text-muted-foreground leading-relaxed">{item.focus}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                  <MessageSquare className="h-4 w-4 text-primary" />
+                  Viral Content Hooks
+                </h4>
+                <div className="space-y-2">
+                  {report.launch_strategy.viral_hooks.map((hook, index) => (
+                    <div 
+                      key={index}
+                      className="p-3 rounded-lg bg-muted/20 border border-border/30 flex items-start gap-3 hover:bg-muted/30 transition-colors"
+                    >
+                      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/20 text-primary text-xs flex items-center justify-center font-bold">
+                        {index + 1}
+                      </span>
+                      <p className="text-sm text-foreground leading-relaxed">{hook}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
-
-      {/* Creator Analysis */}
-      <Card className="border-border/50 bg-card/50 backdrop-blur-xl">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <Users className="h-5 w-5 text-primary" />
-            Creator Analysis
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex flex-wrap gap-2">
-            <Badge variant="secondary" className="text-sm">
-              {report.creator_analysis.niche}
-            </Badge>
-          </div>
-          <div>
-            <p className="text-sm text-muted-foreground mb-2">Audience Vibe</p>
-            <p className="text-foreground">{report.creator_analysis.audience_vibe}</p>
-          </div>
-          <div>
-            <p className="text-sm text-muted-foreground mb-2 flex items-center gap-1">
-              <Target className="h-4 w-4" />
-              Audience Pain Points
-            </p>
-            <ul className="space-y-2">
-              {report.creator_analysis.unmet_needs.map((need, index) => (
-                <li key={index} className="flex items-start gap-2 text-foreground">
-                  <span className="text-primary mt-1">•</span>
-                  {need}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* The Product */}
-      <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-transparent backdrop-blur-xl">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <Lightbulb className="h-5 w-5 text-primary" />
-            The Product Idea
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <h3 className="text-xl font-bold text-primary">{report.the_product.name}</h3>
-            <Badge variant="outline" className="mt-2">{report.the_product.type}</Badge>
-          </div>
-          <p className="text-foreground italic">"{report.the_product.one_sentence_pitch}"</p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
-            <div className="flex items-center gap-3 p-4 rounded-lg bg-background/50 border border-border/50">
-              <DollarSign className="h-8 w-8 text-green-500" />
-              <div>
-                <p className="text-sm text-muted-foreground">Suggested Price</p>
-                <p className="font-bold text-lg">{report.the_product.suggested_price}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 p-4 rounded-lg bg-background/50 border border-border/50">
-              <TrendingUp className="h-8 w-8 text-primary" />
-              <div>
-                <p className="text-sm text-muted-foreground">Revenue Potential</p>
-                <p className="font-bold text-lg">{report.the_product.estimated_revenue_potential}</p>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Launch Strategy */}
-      <Card className="border-border/50 bg-card/50 backdrop-blur-xl">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <Rocket className="h-5 w-5 text-primary" />
-            Launch Strategy
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="p-4 rounded-lg bg-primary/10 border border-primary/30">
-            <p className="text-sm text-muted-foreground mb-1">Pre-Launch Hook</p>
-            <p className="font-medium text-foreground">{report.launch_strategy.pre_launch_hook}</p>
-          </div>
-
-          <div>
-            <h4 className="font-semibold mb-4 flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-primary" />
-              30-Day Launch Calendar
-            </h4>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-              {report.launch_strategy.day_1_to_30_plan.map((item) => (
-                <div 
-                  key={item.week} 
-                  className="p-4 rounded-lg bg-background/50 border border-border/50 hover:border-primary/50 transition-colors"
-                >
-                  <p className="text-primary font-bold mb-1">Week {item.week}</p>
-                  <p className="text-sm text-muted-foreground">{item.focus}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <h4 className="font-semibold mb-4 flex items-center gap-2">
-              <MessageSquare className="h-4 w-4 text-primary" />
-              Viral Content Hooks
-            </h4>
-            <div className="space-y-2">
-              {report.launch_strategy.viral_hooks.map((hook, index) => (
-                <div 
-                  key={index}
-                  className="p-3 rounded-lg bg-background/50 border border-border/50 flex items-start gap-3"
-                >
-                  <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/20 text-primary text-sm flex items-center justify-center font-medium">
-                    {index + 1}
-                  </span>
-                  <p className="text-foreground">{hook}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 };
