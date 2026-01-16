@@ -2,7 +2,7 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.90.1";
 
-const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
+const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -48,8 +48,8 @@ serve(async (req) => {
   }
 
   try {
-    if (!GEMINI_API_KEY) {
-      throw new Error('GEMINI_API_KEY is not configured');
+    if (!LOVABLE_API_KEY) {
+      throw new Error('LOVABLE_API_KEY is not configured');
     }
 
     const authHeader = req.headers.get('Authorization');
@@ -109,48 +109,60 @@ Please suggest a high-profit digital product strategy for this creator.`;
       throw new Error('Invalid platform. Must be "youtube" or "instagram"');
     }
 
-    console.log('Calling Gemini API for:', platform, url);
+    console.log('Calling Lovable AI Gateway for:', platform, url);
 
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
+      'https://ai.gateway.lovable.dev/v1/chat/completions',
       {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+          'Content-Type': 'application/json'
+        },
         body: JSON.stringify({
-          contents: [
-            {
-              role: 'user',
-              parts: [{ text: `${SYSTEM_PROMPT}\n\n${userPrompt}` }]
-            }
+          model: 'google/gemini-3-flash-preview',
+          messages: [
+            { role: 'system', content: SYSTEM_PROMPT },
+            { role: 'user', content: userPrompt }
           ],
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 2048,
-            responseMimeType: 'application/json'
-          }
+          response_format: { type: 'json_object' }
         })
       }
     );
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Gemini API error:', response.status, errorText);
-      throw new Error(`Gemini API error: ${response.status}`);
+      console.error('Lovable AI Gateway error:', response.status, errorText);
+      
+      if (response.status === 429) {
+        return new Response(
+          JSON.stringify({ error: 'Rate limit exceeded. Please try again in a moment.', code: 'RATE_LIMITED' }),
+          { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      if (response.status === 402) {
+        return new Response(
+          JSON.stringify({ error: 'AI credits exhausted. Please add funds to your workspace.', code: 'AI_CREDITS_EXHAUSTED' }),
+          { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
+      throw new Error(`AI Gateway error: ${response.status}`);
     }
 
-    const geminiData = await response.json();
-    console.log('Gemini response received');
+    const aiData = await response.json();
+    console.log('Lovable AI response received');
 
-    const content = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
+    const content = aiData.choices?.[0]?.message?.content;
     if (!content) {
-      throw new Error('No content in Gemini response');
+      throw new Error('No content in AI response');
     }
 
     let parsedReport;
     try {
       parsedReport = JSON.parse(content);
     } catch (parseError) {
-      console.error('Failed to parse Gemini JSON response:', content);
+      console.error('Failed to parse AI JSON response:', content);
       throw new Error('Failed to parse AI response as JSON');
     }
 
