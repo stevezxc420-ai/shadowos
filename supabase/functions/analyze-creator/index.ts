@@ -28,8 +28,16 @@ OUTPUT STRUCTURE (Return ONLY valid JSON):
     "type": "Course / Community / Template / Workshop",
     "one_sentence_pitch": "The 'Transformational' promise",
     "suggested_price": "One-time price and why",
-    "estimated_revenue_potential": "Monthly revenue estimate based on followers"
+    "estimated_revenue_potential": "Monthly revenue estimate based on followers",
+    "base_audience_size": 10000,
+    "base_price": 97
   },
+  "competitor_gaps": [
+    {
+      "flaw": "Specific competitor weakness in this niche",
+      "advantage": "How the creator can exploit this gap"
+    }
+  ],
   "launch_strategy": {
     "pre_launch_hook": "A 'coming soon' teaser idea",
     "day_1_to_30_plan": [
@@ -38,7 +46,8 @@ OUTPUT STRUCTURE (Return ONLY valid JSON):
       {"week": 3, "focus": "Social Proof & Trust"},
       {"week": 4, "focus": "The Hard Launch & Scarcity"}
     ],
-    "viral_hooks": ["5 specific Reel/Short hooks tailored to their voice"]
+    "viral_hooks": ["5 specific Reel/Short hooks tailored to their voice"],
+    "dm_script": "A ready-to-use DM script for reaching out to potential customers or collaborators"
   }
 }`;
 
