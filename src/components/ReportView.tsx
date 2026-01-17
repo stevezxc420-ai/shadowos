@@ -13,9 +13,18 @@ import {
   TrendingUp,
   MessageSquare,
   X,
-  ArrowLeft
+  ArrowLeft,
+  Mail
 } from "lucide-react";
 import { jsPDF } from "jspdf";
+import RevenueCalculator from "./RevenueCalculator";
+import CompetitorGapCard from "./CompetitorGapCard";
+import CopyableScript from "./CopyableScript";
+
+interface CompetitorGap {
+  flaw: string;
+  advantage: string;
+}
 
 interface ReportData {
   creator_analysis: {
@@ -29,11 +38,15 @@ interface ReportData {
     one_sentence_pitch: string;
     suggested_price: string;
     estimated_revenue_potential: string;
+    base_audience_size?: number;
+    base_price?: number;
   };
+  competitor_gaps?: CompetitorGap[];
   launch_strategy: {
     pre_launch_hook: string;
     day_1_to_30_plan: Array<{ week: number; focus: string }>;
     viral_hooks: string[];
+    dm_script?: string;
   };
 }
 
@@ -109,6 +122,29 @@ const ReportView = ({ report, platform, url, onClose }: ReportViewProps) => {
     doc.text(`Revenue Potential: ${report.the_product.estimated_revenue_potential}`, 20, y);
     y += 15;
 
+    // Competitor Gaps Section
+    if (report.competitor_gaps && report.competitor_gaps.length > 0) {
+      if (y > 220) {
+        doc.addPage();
+        y = 20;
+      }
+      doc.setFontSize(16);
+      doc.text("Strategic Advantages (Competitor Gaps)", 20, y);
+      y += 10;
+
+      doc.setFontSize(10);
+      report.competitor_gaps.forEach((gap, index) => {
+        const flawLines = doc.splitTextToSize(`${index + 1}. Flaw: ${gap.flaw}`, pageWidth - 50);
+        doc.text(flawLines, 25, y);
+        y += flawLines.length * 6;
+        
+        const advLines = doc.splitTextToSize(`   Advantage: ${gap.advantage}`, pageWidth - 50);
+        doc.text(advLines, 25, y);
+        y += advLines.length * 6 + 4;
+      });
+      y += 10;
+    }
+
     // Launch Strategy Section
     if (y > 250) {
       doc.addPage();
@@ -145,6 +181,19 @@ const ReportView = ({ report, platform, url, onClose }: ReportViewProps) => {
       y += hookTextLines.length * 6 + 2;
     });
 
+    // DM Script
+    if (report.launch_strategy.dm_script) {
+      if (y > 200) {
+        doc.addPage();
+        y = 20;
+      }
+      y += 10;
+      doc.text("DM Script:", 20, y);
+      y += 6;
+      const dmLines = doc.splitTextToSize(report.launch_strategy.dm_script, pageWidth - 50);
+      doc.text(dmLines, 25, y);
+    }
+
     // Footer
     doc.setFontSize(8);
     doc.setTextColor(150, 150, 150);
@@ -152,6 +201,10 @@ const ReportView = ({ report, platform, url, onClose }: ReportViewProps) => {
 
     doc.save(`ShadowOS-Report-${Date.now()}.pdf`);
   };
+
+  // Extract base values for calculator
+  const baseAudienceSize = report.the_product.base_audience_size || 10000;
+  const basePrice = report.the_product.base_price || 97;
 
   return (
     <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm">
@@ -265,6 +318,17 @@ const ReportView = ({ report, platform, url, onClose }: ReportViewProps) => {
             </CardContent>
           </Card>
 
+          {/* Revenue Calculator */}
+          <RevenueCalculator 
+            baseAudienceSize={baseAudienceSize} 
+            basePrice={basePrice} 
+          />
+
+          {/* Competitor Gap Card */}
+          {report.competitor_gaps && report.competitor_gaps.length > 0 && (
+            <CompetitorGapCard gaps={report.competitor_gaps} />
+          )}
+
           {/* Launch Strategy */}
           <Card className="border-border/50 bg-card/80">
             <CardHeader className="pb-3">
@@ -277,7 +341,10 @@ const ReportView = ({ report, platform, url, onClose }: ReportViewProps) => {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="p-4 rounded-lg bg-primary/5 border border-primary/20">
-                <p className="text-xs font-medium text-primary mb-1 uppercase tracking-wide">🚀 Pre-Launch Hook</p>
+                <div className="flex items-center justify-between mb-1">
+                  <p className="text-xs font-medium text-primary uppercase tracking-wide">🚀 Pre-Launch Hook</p>
+                  <CopyableScript text={report.launch_strategy.pre_launch_hook} label="Copy" />
+                </div>
                 <p className="font-medium text-foreground">{report.launch_strategy.pre_launch_hook}</p>
               </div>
 
@@ -303,21 +370,42 @@ const ReportView = ({ report, platform, url, onClose }: ReportViewProps) => {
                 <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
                   <MessageSquare className="h-4 w-4 text-primary" />
                   Viral Content Hooks
+                  <span className="text-xs font-normal text-muted-foreground ml-auto">One-click copy</span>
                 </h4>
                 <div className="space-y-2">
                   {report.launch_strategy.viral_hooks.map((hook, index) => (
                     <div 
                       key={index}
-                      className="p-3 rounded-lg bg-muted/20 border border-border/30 flex items-start gap-3 hover:bg-muted/30 transition-colors"
+                      className="p-3 rounded-lg bg-muted/20 border border-border/30 flex items-start gap-3 hover:bg-muted/30 transition-colors group"
                     >
                       <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/20 text-primary text-xs flex items-center justify-center font-bold">
                         {index + 1}
                       </span>
-                      <p className="text-sm text-foreground leading-relaxed">{hook}</p>
+                      <p className="text-sm text-foreground leading-relaxed flex-1">{hook}</p>
+                      <CopyableScript text={hook} label="Copy" />
                     </div>
                   ))}
                 </div>
               </div>
+
+              {/* DM Script Section */}
+              {report.launch_strategy.dm_script && (
+                <div>
+                  <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                    <Mail className="h-4 w-4 text-primary" />
+                    Ready-to-Use DM Script
+                    <span className="text-xs font-normal text-muted-foreground ml-auto">Copy & personalize</span>
+                  </h4>
+                  <div className="p-4 rounded-lg bg-gradient-to-br from-blue-500/10 via-blue-500/5 to-transparent border border-blue-500/30">
+                    <div className="flex justify-end mb-2">
+                      <CopyableScript text={report.launch_strategy.dm_script} label="Copy Script" />
+                    </div>
+                    <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
+                      {report.launch_strategy.dm_script}
+                    </p>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
