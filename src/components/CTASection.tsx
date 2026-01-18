@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const CTASection = () => {
   return (
@@ -12,18 +13,20 @@ const CTASection = () => {
       <div className="container mx-auto px-6 relative z-10">
         <div className="glass-card max-w-4xl mx-auto p-12 md:p-16 text-center glow-border">
           <h2 className="font-display text-4xl md:text-5xl font-bold mb-4">
-            Ready to operate from the{" "}
-            <span className="text-primary">shadows</span>?
+            Ready to close your next{" "}
+            <span className="text-primary">creator deal</span>?
           </h2>
           <p className="text-lg text-muted-foreground mb-8 max-w-xl mx-auto">
-            Join elite shadow operators who are scaling creator businesses and earning while staying behind the scenes.
+            Stop guessing. Start closing. Analyze any creator and get the insights you need to pitch with confidence.
           </p>
-          <Button variant="glow" size="xl" className="group">
-            Start Your Free Trial
-            <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
-          </Button>
+          <Link to="/auth">
+            <Button variant="glow" size="xl" className="group">
+              Analyze Your First Creator
+              <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+            </Button>
+          </Link>
           <p className="mt-4 text-sm text-muted-foreground">
-            No credit card required • 14-day free trial
+            3 free analyses • No credit card required
           </p>
         </div>
       </div>
