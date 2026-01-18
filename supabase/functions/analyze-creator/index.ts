@@ -185,6 +185,20 @@ Please suggest a high-profit digital product strategy for this creator.`;
       console.error('Failed to deduct credit:', updateError);
     }
 
+    // Save report to database
+    const { error: saveError } = await supabase
+      .from('reports')
+      .insert({
+        user_id: user.id,
+        platform,
+        url,
+        report_data: parsedReport,
+      });
+
+    if (saveError) {
+      console.error('Failed to save report:', saveError);
+    }
+
     return new Response(
       JSON.stringify({ 
         report: parsedReport, 
