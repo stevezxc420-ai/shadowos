@@ -64,13 +64,13 @@ const DemoVideoSection = () => {
         >
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-primary/30 bg-primary/5 mb-4">
             <Sparkles className="h-3.5 w-3.5 text-primary" />
-            <span className="text-xs text-primary font-medium">See the magic</span>
+            <span className="text-xs text-primary font-medium">Watch the walkthrough</span>
           </div>
           <h2 className="font-display text-4xl md:text-5xl font-bold mb-4">
-            See it in <span className="text-primary">action</span>
+            From URL to <span className="text-primary">Pitch Deck</span> in 60 Seconds
           </h2>
           <p className="text-lg text-muted-foreground">
-            Upload a demo video to showcase your shadow operations workflow.
+            See how ShadowOS transforms any creator profile into a complete monetization blueprint.
           </p>
         </div>
 

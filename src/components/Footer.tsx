@@ -33,7 +33,7 @@ const Footer = () => {
               </span>
             </a>
             <p className="text-sm text-muted-foreground leading-relaxed mb-6 max-w-sm">
-              The operating system for shadow operators. Scale creator businesses from the shadows with our all-in-one platform.
+              AI-powered creator analysis for shadow operators. Find hidden revenue, craft perfect pitches, and close more deals.
             </p>
             
             {/* Newsletter */}

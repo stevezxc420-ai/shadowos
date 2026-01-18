@@ -1,36 +1,36 @@
-import { BarChart3, Users, Wallet, Calendar, MessageSquare, Shield } from "lucide-react";
+import { Sparkles, DollarSign, MessageCircle, FileText, Target, Zap } from "lucide-react";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 
 const features = [
   {
-    icon: BarChart3,
-    title: "Revenue Analytics",
-    description: "Track every revenue stream across multiple creators. Real-time dashboards that reveal growth opportunities.",
+    icon: Sparkles,
+    title: "AI Content Analysis",
+    description: "Instantly scan any creator's content to identify monetization gaps and untapped revenue streams.",
   },
   {
-    icon: Users,
-    title: "Client Management",
-    description: "Manage your entire roster of creators from one place. Streamlined communication and task tracking.",
+    icon: DollarSign,
+    title: "Revenue Projections",
+    description: "Get accurate revenue estimates with interactive calculators to show creators their earning potential.",
   },
   {
-    icon: Wallet,
-    title: "Payment Automation",
-    description: "Automate invoicing, revenue splits, and payouts. Never chase payments again.",
+    icon: MessageCircle,
+    title: "Ready-to-Send DM Scripts",
+    description: "One-click copy scripts crafted to convert creators into high-paying clients.",
   },
   {
-    icon: Calendar,
-    title: "Content Calendar",
-    description: "Plan and schedule content across all platforms. Coordinate launches and campaigns effortlessly.",
+    icon: Target,
+    title: "Viral Hook Generator",
+    description: "AI-generated hooks and pre-launch teasers tailored to the creator's niche and audience.",
   },
   {
-    icon: MessageSquare,
-    title: "Team Collaboration",
-    description: "Built-in chat, file sharing, and project management for your shadow agency team.",
+    icon: FileText,
+    title: "Professional Pitch Decks",
+    description: "Export beautiful 5-page PDFs summarizing the opportunity to share with creators.",
   },
   {
-    icon: Shield,
-    title: "Contract Vault",
-    description: "Secure storage for contracts, NDAs, and sensitive documents. Full audit trail included.",
+    icon: Zap,
+    title: "Competitor Gap Analysis",
+    description: "Identify strategic advantages by analyzing what competitors in the niche are missing.",
   },
 ];
 
@@ -86,11 +86,11 @@ const FeaturesSection = () => {
           }`}
         >
           <h2 className="font-display text-4xl md:text-5xl font-bold mb-4">
-            Everything you need to{" "}
-            <span className="text-primary">operate</span>
+            Your Secret Weapon for{" "}
+            <span className="text-primary">Closing Deals</span>
           </h2>
           <p className="text-lg text-muted-foreground">
-            A complete toolkit designed for shadow operators who demand excellence.
+            Everything you need to identify, pitch, and close creator clients with confidence.
           </p>
         </div>
 
