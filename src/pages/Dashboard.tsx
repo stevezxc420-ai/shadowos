@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Ghost, LogOut, Coins, Loader2, Sparkles, FileText, Eye, EyeOff, Youtube, Instagram, Zap, ArrowRight } from "lucide-react";
+import { Ghost, LogOut, Coins, Loader2, Sparkles, FileText, Eye, EyeOff, Youtube, Instagram, Zap, ArrowRight, FolderOpen } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import ReportView from "@/components/ReportView";
@@ -255,6 +255,13 @@ const Dashboard = () => {
 
             {/* Right side */}
             <div className="flex items-center gap-3">
+              <Link to="/my-reports">
+                <Button variant="ghost" size="sm" className="gap-1.5 h-8">
+                  <FolderOpen className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">My Reports</span>
+                </Button>
+              </Link>
+
               <Button
                 variant="ghost"
                 size="sm"
