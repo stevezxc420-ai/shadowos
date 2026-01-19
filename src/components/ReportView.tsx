@@ -88,43 +88,64 @@ const ReportView = ({ report, platform, url, onClose }: ReportViewProps) => {
     doc.text('ShadowOS • Revenue Strategy', 20, pageHeight - 10);
   };
 
+  // Helper function to truncate text to fit within a certain width
+  const truncateText = (text: string, maxLength: number): string => {
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength - 3) + '...';
+  };
+
   const handleExportPitchDeck = () => {
     const doc = new jsPDF('landscape');
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
     const centerX = pageWidth / 2;
     const totalSlides = 5;
+    const margin = 25;
+    const contentWidth = pageWidth - (margin * 2);
 
     // ===== SLIDE 1: Title Slide =====
     drawSlideBackground(doc, 1, totalSlides);
     
     doc.setFontSize(14);
     doc.setTextColor(139, 92, 246);
-    doc.text('REVENUE STRATEGY', centerX, 50, { align: 'center' });
+    doc.text('REVENUE STRATEGY', centerX, 45, { align: 'center' });
     
-    doc.setFontSize(42);
+    // Product name - split into multiple lines if needed
+    doc.setFontSize(32);
     doc.setTextColor(255, 255, 255);
-    doc.text(report.the_product.name, centerX, 80, { align: 'center' });
+    const productNameLines = doc.splitTextToSize(report.the_product.name, contentWidth - 20);
+    let titleY = 70;
+    productNameLines.slice(0, 2).forEach((line: string) => {
+      doc.text(line, centerX, titleY, { align: 'center' });
+      titleY += 14;
+    });
     
-    doc.setFontSize(16);
+    // Pitch - properly wrapped
+    doc.setFontSize(14);
     doc.setTextColor(180, 180, 200);
-    const pitchLines = doc.splitTextToSize(report.the_product.one_sentence_pitch, pageWidth - 80);
-    doc.text(pitchLines, centerX, 100, { align: 'center' });
+    const pitchLines = doc.splitTextToSize(report.the_product.one_sentence_pitch, contentWidth - 40);
+    let pitchY = titleY + 10;
+    pitchLines.slice(0, 3).forEach((line: string) => {
+      doc.text(line, centerX, pitchY, { align: 'center' });
+      pitchY += 7;
+    });
     
     // Product type badge
+    const badgeText = truncateText(report.the_product.type, 25);
+    const badgeWidth = Math.min(doc.getTextWidth(badgeText) + 20, 100);
     doc.setFillColor(139, 92, 246);
-    const badgeWidth = 60;
-    doc.roundedRect(centerX - badgeWidth/2, 120, badgeWidth, 12, 3, 3, 'F');
+    doc.roundedRect(centerX - badgeWidth/2, pitchY + 5, badgeWidth, 14, 3, 3, 'F');
     doc.setFontSize(10);
     doc.setTextColor(255, 255, 255);
-    doc.text(report.the_product.type, centerX, 128, { align: 'center' });
+    doc.text(badgeText, centerX, pitchY + 14, { align: 'center' });
     
     // Platform info
     doc.setFontSize(11);
     doc.setTextColor(100, 100, 120);
-    doc.text(`Prepared for: ${platform === 'youtube' ? 'YouTube' : 'Instagram'} Creator`, centerX, 160, { align: 'center' });
+    doc.text(`Prepared for: ${platform === 'youtube' ? 'YouTube' : 'Instagram'} Creator`, centerX, pageHeight - 35, { align: 'center' });
     doc.setFontSize(9);
-    doc.text(url, centerX, 170, { align: 'center' });
+    const truncatedUrl = truncateText(url, 60);
+    doc.text(truncatedUrl, centerX, pageHeight - 25, { align: 'center' });
 
     // ===== SLIDE 2: The Problem =====
     doc.addPage('landscape');
@@ -132,38 +153,45 @@ const ReportView = ({ report, platform, url, onClose }: ReportViewProps) => {
     
     doc.setFontSize(12);
     doc.setTextColor(239, 68, 68);
-    doc.text('THE PROBLEM', 30, 35);
+    doc.text('THE PROBLEM', margin, 30);
     
-    doc.setFontSize(32);
+    doc.setFontSize(28);
     doc.setTextColor(255, 255, 255);
-    doc.text('Your Audience Has Unmet Needs', 30, 55);
+    doc.text('Your Audience Has Unmet Needs', margin, 50);
     
-    doc.setFontSize(14);
+    doc.setFontSize(12);
     doc.setTextColor(180, 180, 200);
-    const vibeLines = doc.splitTextToSize(report.creator_analysis.audience_vibe, pageWidth - 60);
-    doc.text(vibeLines, 30, 75);
+    const vibeLines = doc.splitTextToSize(report.creator_analysis.audience_vibe, contentWidth);
+    vibeLines.slice(0, 2).forEach((line: string, idx: number) => {
+      doc.text(line, margin, 65 + (idx * 6));
+    });
     
-    // Pain points as cards
-    let cardY = 100;
-    report.creator_analysis.unmet_needs.forEach((need, index) => {
+    // Pain points as cards - with proper text wrapping
+    let cardY = 85;
+    const cardHeight = 28;
+    const maxCards = Math.min(report.creator_analysis.unmet_needs.length, 3);
+    
+    report.creator_analysis.unmet_needs.slice(0, maxCards).forEach((need, index) => {
       // Card background
       doc.setFillColor(30, 30, 45);
-      doc.roundedRect(30, cardY, pageWidth - 60, 25, 4, 4, 'F');
+      doc.roundedRect(margin, cardY, contentWidth, cardHeight, 4, 4, 'F');
       
       // Number badge
       doc.setFillColor(239, 68, 68);
-      doc.circle(45, cardY + 12.5, 8, 'F');
+      doc.circle(margin + 15, cardY + cardHeight/2, 8, 'F');
       doc.setFontSize(12);
       doc.setTextColor(255, 255, 255);
-      doc.text(String(index + 1), 45, cardY + 16, { align: 'center' });
+      doc.text(String(index + 1), margin + 15, cardY + cardHeight/2 + 4, { align: 'center' });
       
-      // Pain point text
-      doc.setFontSize(12);
+      // Pain point text - properly wrapped within card
+      doc.setFontSize(11);
       doc.setTextColor(220, 220, 230);
-      const needLines = doc.splitTextToSize(need, pageWidth - 100);
-      doc.text(needLines, 60, cardY + 15);
+      const needLines = doc.splitTextToSize(need, contentWidth - 50);
+      needLines.slice(0, 2).forEach((line: string, lineIdx: number) => {
+        doc.text(line, margin + 35, cardY + 12 + (lineIdx * 6));
+      });
       
-      cardY += 30;
+      cardY += cardHeight + 5;
     });
 
     // ===== SLIDE 3: The Solution =====
@@ -172,39 +200,54 @@ const ReportView = ({ report, platform, url, onClose }: ReportViewProps) => {
     
     doc.setFontSize(12);
     doc.setTextColor(34, 197, 94);
-    doc.text('THE SOLUTION', 30, 35);
+    doc.text('THE SOLUTION', margin, 30);
     
-    doc.setFontSize(32);
+    // Product name - wrapped
+    doc.setFontSize(26);
     doc.setTextColor(255, 255, 255);
-    doc.text(report.the_product.name, 30, 55);
+    const solutionNameLines = doc.splitTextToSize(report.the_product.name, contentWidth);
+    solutionNameLines.slice(0, 2).forEach((line: string, idx: number) => {
+      doc.text(line, margin, 48 + (idx * 12));
+    });
     
-    doc.setFontSize(14);
+    const solutionStartY = 48 + (Math.min(solutionNameLines.length, 2) * 12) + 5;
+    
+    doc.setFontSize(12);
     doc.setTextColor(180, 180, 200);
-    const solutionPitch = doc.splitTextToSize(`"${report.the_product.one_sentence_pitch}"`, pageWidth - 60);
-    doc.text(solutionPitch, 30, 75);
+    const solutionPitch = doc.splitTextToSize(`"${report.the_product.one_sentence_pitch}"`, contentWidth);
+    solutionPitch.slice(0, 2).forEach((line: string, idx: number) => {
+      doc.text(line, margin, solutionStartY + (idx * 6));
+    });
     
     // Two column layout for price and type
-    const colWidth = (pageWidth - 80) / 2;
+    const colWidth = (contentWidth - 20) / 2;
+    const cardStartY = solutionStartY + (Math.min(solutionPitch.length, 2) * 6) + 15;
     
     // Left column - Product Type
     doc.setFillColor(30, 30, 45);
-    doc.roundedRect(30, 95, colWidth, 50, 6, 6, 'F');
+    doc.roundedRect(margin, cardStartY, colWidth, 55, 6, 6, 'F');
     doc.setFontSize(10);
     doc.setTextColor(139, 92, 246);
-    doc.text('PRODUCT TYPE', 40, 110);
-    doc.setFontSize(20);
+    doc.text('PRODUCT TYPE', margin + 15, cardStartY + 18);
+    doc.setFontSize(14);
     doc.setTextColor(255, 255, 255);
-    doc.text(report.the_product.type, 40, 130);
+    const typeLines = doc.splitTextToSize(report.the_product.type, colWidth - 30);
+    typeLines.slice(0, 2).forEach((line: string, idx: number) => {
+      doc.text(line, margin + 15, cardStartY + 35 + (idx * 7));
+    });
     
     // Right column - Suggested Price
     doc.setFillColor(30, 30, 45);
-    doc.roundedRect(50 + colWidth, 95, colWidth, 50, 6, 6, 'F');
+    doc.roundedRect(margin + colWidth + 20, cardStartY, colWidth, 55, 6, 6, 'F');
     doc.setFontSize(10);
     doc.setTextColor(34, 197, 94);
-    doc.text('SUGGESTED PRICE', 60 + colWidth, 110);
-    doc.setFontSize(20);
+    doc.text('SUGGESTED PRICE', margin + colWidth + 35, cardStartY + 18);
+    doc.setFontSize(14);
     doc.setTextColor(255, 255, 255);
-    doc.text(report.the_product.suggested_price, 60 + colWidth, 130);
+    const priceLines = doc.splitTextToSize(report.the_product.suggested_price, colWidth - 30);
+    priceLines.slice(0, 2).forEach((line: string, idx: number) => {
+      doc.text(line, margin + colWidth + 35, cardStartY + 35 + (idx * 7));
+    });
 
     // ===== SLIDE 4: Revenue Potential =====
     doc.addPage('landscape');
@@ -212,34 +255,37 @@ const ReportView = ({ report, platform, url, onClose }: ReportViewProps) => {
     
     doc.setFontSize(12);
     doc.setTextColor(139, 92, 246);
-    doc.text('THE OPPORTUNITY', 30, 35);
+    doc.text('THE OPPORTUNITY', margin, 30);
     
-    doc.setFontSize(32);
+    doc.setFontSize(28);
     doc.setTextColor(255, 255, 255);
-    doc.text('Revenue Potential', 30, 55);
+    doc.text('Revenue Potential', margin, 50);
     
     // Big revenue number
     doc.setFillColor(139, 92, 246);
-    doc.roundedRect(30, 70, pageWidth - 60, 60, 8, 8, 'F');
-    doc.setFontSize(36);
+    doc.roundedRect(margin, 60, contentWidth, 50, 8, 8, 'F');
+    doc.setFontSize(28);
     doc.setTextColor(255, 255, 255);
-    doc.text(report.the_product.estimated_revenue_potential, centerX, 105, { align: 'center' });
-    doc.setFontSize(12);
-    doc.text('Estimated Monthly Revenue', centerX, 120, { align: 'center' });
+    const revenueText = truncateText(report.the_product.estimated_revenue_potential, 40);
+    doc.text(revenueText, centerX, 88, { align: 'center' });
+    doc.setFontSize(11);
+    doc.text('Estimated Monthly Revenue', centerX, 102, { align: 'center' });
     
     // Competitor advantages if available
     if (report.competitor_gaps && report.competitor_gaps.length > 0) {
       doc.setFontSize(14);
       doc.setTextColor(251, 191, 36);
-      doc.text('Strategic Advantages', 30, 150);
+      doc.text('Strategic Advantages', margin, 130);
       
-      let gapY = 160;
+      let gapY = 142;
       report.competitor_gaps.slice(0, 2).forEach((gap) => {
         doc.setFontSize(11);
         doc.setTextColor(180, 180, 200);
-        const gapText = doc.splitTextToSize(`✓ ${gap.advantage}`, pageWidth - 60);
-        doc.text(gapText, 30, gapY);
-        gapY += 15;
+        const gapText = doc.splitTextToSize(`> ${gap.advantage}`, contentWidth - 10);
+        gapText.slice(0, 2).forEach((line: string, idx: number) => {
+          doc.text(line, margin, gapY + (idx * 6));
+        });
+        gapY += 18;
       });
     }
 
@@ -249,45 +295,53 @@ const ReportView = ({ report, platform, url, onClose }: ReportViewProps) => {
     
     doc.setFontSize(12);
     doc.setTextColor(139, 92, 246);
-    doc.text('THE ROADMAP', 30, 35);
+    doc.text('THE ROADMAP', margin, 30);
     
-    doc.setFontSize(32);
+    doc.setFontSize(26);
     doc.setTextColor(255, 255, 255);
-    doc.text('30-Day Launch Plan', 30, 55);
+    doc.text('30-Day Launch Plan', margin, 50);
     
-    // Week cards in a row
-    const weekCardWidth = (pageWidth - 80) / 4;
-    report.launch_strategy.day_1_to_30_plan.forEach((item, index) => {
-      const cardX = 30 + (index * (weekCardWidth + 10));
+    // Week cards in a row - with proper spacing and text wrapping
+    const weekCardGap = 8;
+    const weekCardWidth = (contentWidth - (weekCardGap * 3)) / 4;
+    const weekCardHeight = 70;
+    
+    report.launch_strategy.day_1_to_30_plan.slice(0, 4).forEach((item, index) => {
+      const cardX = margin + (index * (weekCardWidth + weekCardGap));
       
       // Card background
       doc.setFillColor(30, 30, 45);
-      doc.roundedRect(cardX, 70, weekCardWidth, 60, 6, 6, 'F');
+      doc.roundedRect(cardX, 60, weekCardWidth, weekCardHeight, 6, 6, 'F');
       
-      // Week number
+      // Week number badge
       doc.setFillColor(139, 92, 246);
-      doc.roundedRect(cardX + 10, 78, 50, 16, 3, 3, 'F');
-      doc.setFontSize(10);
+      doc.roundedRect(cardX + 8, 68, 45, 14, 3, 3, 'F');
+      doc.setFontSize(9);
       doc.setTextColor(255, 255, 255);
-      doc.text(`WEEK ${item.week}`, cardX + 35, 89, { align: 'center' });
+      doc.text(`WEEK ${item.week}`, cardX + 30, 77, { align: 'center' });
       
-      // Focus text
-      doc.setFontSize(10);
+      // Focus text - properly wrapped within card
+      doc.setFontSize(9);
       doc.setTextColor(180, 180, 200);
-      const focusLines = doc.splitTextToSize(item.focus, weekCardWidth - 20);
-      doc.text(focusLines, cardX + 10, 105);
+      const focusLines = doc.splitTextToSize(item.focus, weekCardWidth - 16);
+      focusLines.slice(0, 4).forEach((line: string, lineIdx: number) => {
+        doc.text(line, cardX + 8, 92 + (lineIdx * 5));
+      });
     });
     
     // Pre-launch hook
+    const hookCardY = 60 + weekCardHeight + 12;
     doc.setFillColor(30, 30, 45);
-    doc.roundedRect(30, 140, pageWidth - 60, 35, 6, 6, 'F');
+    doc.roundedRect(margin, hookCardY, contentWidth, 40, 6, 6, 'F');
     doc.setFontSize(10);
     doc.setTextColor(139, 92, 246);
-    doc.text('🚀 PRE-LAUNCH HOOK', 40, 155);
-    doc.setFontSize(11);
+    doc.text('PRE-LAUNCH HOOK', margin + 15, hookCardY + 15);
+    doc.setFontSize(10);
     doc.setTextColor(220, 220, 230);
-    const hookLines = doc.splitTextToSize(report.launch_strategy.pre_launch_hook, pageWidth - 80);
-    doc.text(hookLines, 40, 167);
+    const hookLines = doc.splitTextToSize(report.launch_strategy.pre_launch_hook, contentWidth - 30);
+    hookLines.slice(0, 2).forEach((line: string, idx: number) => {
+      doc.text(line, margin + 15, hookCardY + 27 + (idx * 5));
+    });
 
     doc.save(`ShadowOS-PitchDeck-${Date.now()}.pdf`);
     
